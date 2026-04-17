@@ -4,4 +4,4 @@ declare(strict_types=1);
 
 namespace RestSDK\Exception;
 
-class ModelException extends \Exception {}
+class DeserializationException extends ApiException {}

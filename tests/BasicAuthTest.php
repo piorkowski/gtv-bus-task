@@ -32,7 +32,7 @@ final class BasicAuthTest extends TestCase
         );
     }
 
-    public function testAuthorizeSetsContentTypeHeader(): void
+    public function testAuthorizeDoesNotSetContentTypeHeader(): void
     {
         $auth = new BasicAuth('user', 'pass');
         $factory = new Psr17Factory();
@@ -40,7 +40,7 @@ final class BasicAuthTest extends TestCase
 
         $authorized = $auth->authorize($request);
 
-        self::assertSame('application/json', $authorized->getHeaderLine('Content-Type'));
+        self::assertSame('', $authorized->getHeaderLine('Content-Type'));
     }
 
     public function testAuthorizeDoesNotMutateOriginalRequest(): void

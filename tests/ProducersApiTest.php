@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests;
 
 use Example\Api\ProducersApi;
-use Example\Model\Producers;
+use Example\Model\Producer;
 use Http\Mock\Client as MockClient;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response;
@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 use RestSDK\Auth\BasicAuth;
 use RestSDK\Client\ApiClient;
 use RestSDK\Exception\ApiException;
+use RestSDK\Response\WrappedResponseDecoder;
 
 final class ProducersApiTest extends TestCase
 {
@@ -32,10 +33,10 @@ final class ProducersApiTest extends TestCase
             new BasicAuth('user', 'pass'),
         );
 
-        $this->api = new ProducersApi($apiClient);
+        $this->api = new ProducersApi($apiClient, new WrappedResponseDecoder());
     }
 
-    public function testGetAllReturnsArrayOfProducers(): void
+    public function testListReturnsArrayOfProducers(): void
     {
         $this->httpClient->addResponse(new Response(
             200,
@@ -49,16 +50,16 @@ final class ProducersApiTest extends TestCase
             ]),
         ));
 
-        $producers = $this->api->get();
+        $producers = $this->api->list();
 
         self::assertCount(2, $producers);
-        self::assertInstanceOf(Producers::class, $producers[0]);
+        self::assertInstanceOf(Producer::class, $producers[0]);
         self::assertSame('Producer A', $producers[0]->name);
         self::assertSame(1, $producers[0]->id);
         self::assertSame('Producer B', $producers[1]->name);
     }
 
-    public function testGetAllWithQueryParams(): void
+    public function testListWithQueryParams(): void
     {
         $this->httpClient->addResponse(new Response(
             200,
@@ -71,7 +72,7 @@ final class ProducersApiTest extends TestCase
             ]),
         ));
 
-        $producers = $this->api->get(['page' => 1, 'limit' => 10]);
+        $producers = $this->api->list(['page' => 1, 'limit' => 10]);
 
         self::assertCount(1, $producers);
 
@@ -81,7 +82,7 @@ final class ProducersApiTest extends TestCase
         self::assertStringContainsString('limit=10', (string) $lastRequest->getUri());
     }
 
-    public function testGetAllReturnsEmptyArrayWhenNoData(): void
+    public function testListReturnsEmptyArrayWhenNoData(): void
     {
         $this->httpClient->addResponse(new Response(
             200,
@@ -89,7 +90,7 @@ final class ProducersApiTest extends TestCase
             json_encode(['success' => true, 'data' => []]),
         ));
 
-        $producers = $this->api->get();
+        $producers = $this->api->list();
 
         self::assertCount(0, $producers);
     }
@@ -109,7 +110,7 @@ final class ProducersApiTest extends TestCase
             ]),
         ));
 
-        $model = new Producers(null, 'New Producer', 'https://example.com');
+        $model = new Producer(null, 'New Producer', 'https://example.com');
         $created = $this->api->create($model);
 
         self::assertSame(123, $created->id);
@@ -132,7 +133,7 @@ final class ProducersApiTest extends TestCase
             ]),
         ));
 
-        $model = new Producers(null, 'Test', ordering: 5);
+        $model = new Producer(null, 'Test', ordering: 5);
         $this->api->create($model);
 
         $lastRequest = $this->httpClient->getLastRequest();
@@ -155,7 +156,7 @@ final class ProducersApiTest extends TestCase
             ]),
         ));
 
-        $producer = $this->api->getById(42);
+        $producer = $this->api->get(42);
 
         self::assertSame(42, $producer->id);
         self::assertSame('Single Producer', $producer->name);
@@ -176,7 +177,7 @@ final class ProducersApiTest extends TestCase
             ]),
         ));
 
-        $model = new Producers(null, 'Updated');
+        $model = new Producer(null, 'Updated');
         $updated = $this->api->update(1, $model);
 
         self::assertSame('Updated', $updated->name);
@@ -195,9 +196,7 @@ final class ProducersApiTest extends TestCase
             json_encode(['success' => true]),
         ));
 
-        $result = $this->api->delete(5);
-
-        self::assertTrue($result);
+        $this->api->delete(5);
 
         $lastRequest = $this->httpClient->getLastRequest();
         self::assertNotNull($lastRequest);
@@ -217,9 +216,9 @@ final class ProducersApiTest extends TestCase
         ));
 
         $this->expectException(ApiException::class);
-        $this->expectExceptionMessage('Validation failed');
+        $this->expectExceptionMessage('Client error');
 
-        $this->api->get();
+        $this->api->list();
     }
 
     public function testInvalidJsonThrowsException(): void
@@ -233,7 +232,7 @@ final class ProducersApiTest extends TestCase
         $this->expectException(ApiException::class);
         $this->expectExceptionMessage('Invalid JSON response');
 
-        $this->api->get();
+        $this->api->list();
     }
 
     public function testRequestContainsAuthorizationHeader(): void
@@ -244,7 +243,7 @@ final class ProducersApiTest extends TestCase
             json_encode(['success' => true, 'data' => []]),
         ));
 
-        $this->api->get();
+        $this->api->list();
 
         $lastRequest = $this->httpClient->getLastRequest();
         self::assertNotNull($lastRequest);
@@ -262,7 +261,7 @@ final class ProducersApiTest extends TestCase
             json_encode(['success' => true, 'data' => []]),
         ));
 
-        $this->api->get();
+        $this->api->list();
 
         $lastRequest = $this->httpClient->getLastRequest();
         self::assertNotNull($lastRequest);

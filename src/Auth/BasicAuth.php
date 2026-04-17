@@ -17,7 +17,7 @@ final class BasicAuth implements AuthInterface
     {
         return $request->withHeader(
             'Authorization',
-            'Basic ' . base64_encode($this->username . ':' . $this->password)
-        )->withHeader('Content-Type', 'application/json');
+            'Basic ' . base64_encode($this->username . ':' . $this->password),
+        );
     }
 }

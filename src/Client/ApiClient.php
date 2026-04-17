@@ -6,6 +6,7 @@ namespace RestSDK\Client;
 
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Log\LoggerInterface;
@@ -29,8 +30,7 @@ final class ApiClient implements ApiClientInterface
     {
         $url = $this->buildUrl($uri, $queryParams);
         $this->log('info', 'GET request', ['url' => $url, 'params' => $queryParams]);
-        $request = $this->requestFactory->createRequest('GET', $url);
-        $request = $this->auth->authorize($request);
+        $request = $this->createAuthorizedRequest('GET', $url);
 
         return $this->httpClient->sendRequest($request);
     }
@@ -63,10 +63,17 @@ final class ApiClient implements ApiClientInterface
     {
         $url = $this->baseUri . $uri;
         $this->log('info', 'DELETE request', ['url' => $url]);
-        $request = $this->requestFactory->createRequest('DELETE', $url);
-        $request = $this->auth->authorize($request);
+        $request = $this->createAuthorizedRequest('DELETE', $url);
 
         return $this->httpClient->sendRequest($request);
+    }
+
+    private function createAuthorizedRequest(string $method, string $url): RequestInterface
+    {
+        $request = $this->requestFactory->createRequest($method, $url);
+        $request = $this->auth->authorize($request);
+
+        return $request->withHeader('Content-Type', 'application/json');
     }
 
     /**
@@ -76,8 +83,7 @@ final class ApiClient implements ApiClientInterface
     {
         $url = $this->baseUri . $uri;
         $this->log('info', $method . ' request', ['url' => $url, 'body' => $body]);
-        $request = $this->requestFactory->createRequest($method, $url);
-        $request = $this->auth->authorize($request);
+        $request = $this->createAuthorizedRequest($method, $url);
 
         $stream = $this->streamFactory->createStream(json_encode($body, JSON_THROW_ON_ERROR));
         $request = $request->withBody($stream);
