@@ -1,20 +1,17 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RestSDK\Auth;
 
 use Psr\Http\Message\RequestInterface;
 
-final class BasicAuth
+final class BasicAuth implements AuthInterface
 {
     public function __construct(
-        private string $username,
-        private string $password
-    ) {
-//      This is shit. It should be #[Autowire] here, but this is a framework-agnostic approach, so I decided not to use additional libraries just for this.
-        $this->username = $_ENV['API_USER_LOGIN'];
-        $this->password = $_ENV['API_USER_PASSWORD'];
-    }
+        private readonly string $username,
+        private readonly string $password,
+    ) {}
 
     public function authorize(RequestInterface $request): RequestInterface
     {

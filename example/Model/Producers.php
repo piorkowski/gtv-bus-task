@@ -1,31 +1,25 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Example\Model;
 
 use RestSDK\Model\ModelInterface;
 
-class Producers implements ModelInterface
+final class Producers implements ModelInterface
 {
-    private const array ENDPOINTS = [
-        'GET' => '/shop_api/v1/producers',
-        'POST' => '/shop_api/v1/producers'
-    ];
-
     public function __construct(
         public readonly ?int $id,
         public readonly string $name,
-        public readonly ?string $siteUrl,
-        public readonly ?string $logoFilename,
-        public readonly ?int $ordering,
-        public readonly ?string $sourceId
+        public readonly ?string $siteUrl = null,
+        public readonly ?string $logoFilename = null,
+        public readonly ?int $ordering = null,
+        public readonly ?string $sourceId = null,
     ) {}
 
-    public function getEndpoints(): array
-    {
-        return self::ENDPOINTS;
-    }
-
+    /**
+     * @param array<string, mixed> $data
+     */
     public static function fromArray(array $data): self
     {
         return new self(
@@ -34,9 +28,13 @@ class Producers implements ModelInterface
             siteUrl: $data['site_url'] ?? null,
             logoFilename: $data['logo_filename'] ?? null,
             ordering: $data['ordering'] ?? null,
-            sourceId: $data['source_id'] ?? null
+            sourceId: $data['source_id'] ?? null,
         );
     }
+
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return array_filter([
@@ -45,6 +43,6 @@ class Producers implements ModelInterface
             'logo_filename' => $this->logoFilename,
             'ordering' => $this->ordering,
             'source_id' => $this->sourceId,
-        ], fn ($v) => $v !== null);
+        ], fn($v) => $v !== null);
     }
 }

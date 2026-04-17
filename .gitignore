@@ -1,2 +1,5 @@
 .idea
 vendor
+var
+.php-cs-fixer.cache
+phpunit.xml

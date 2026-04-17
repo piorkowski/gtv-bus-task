@@ -1,11 +1,18 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RestSDK\Model;
 
 interface ModelInterface
 {
-    public function getEndpoints(): array;
+    /**
+     * @param array<string, mixed> $data
+     */
     public static function fromArray(array $data): self;
+
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(): array;
 }
